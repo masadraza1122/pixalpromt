@@ -402,7 +402,7 @@ export default function HomeScreen() {
           style={[styles.header, dynamicStyles.header]}
         >
           <View style={[styles.headerContent, dynamicStyles.headerContent]}>
-            {activeBottomTab === 'favorite' ? (
+            {activeBottomTab === 'favorite' || activeBottomTab === 'more' ? (
               <TouchableOpacity onPress={() => handleTabPress('home')} activeOpacity={0.7}>
                 <Ionicons name="arrow-back" size={responsiveSizes.iconSize} color="#FFFFFF" />
               </TouchableOpacity>
