@@ -402,7 +402,13 @@ export default function HomeScreen() {
           style={[styles.header, dynamicStyles.header]}
         >
           <View style={[styles.headerContent, dynamicStyles.headerContent]}>
-            <Ionicons name="arrow-back" size={responsiveSizes.iconSize} color="#FFFFFF" />
+            {activeBottomTab === 'favorite' ? (
+              <TouchableOpacity onPress={() => handleTabPress('home')} activeOpacity={0.7}>
+                <Ionicons name="arrow-back" size={responsiveSizes.iconSize} color="#FFFFFF" />
+              </TouchableOpacity>
+            ) : (
+              <View style={{ width: responsiveSizes.iconSize }} />
+            )}
             <View style={styles.headerTextContainer}>
               <Text style={[styles.appName, dynamicStyles.appName]}>PixalPrompt</Text>
               <Text style={[styles.subtitle, dynamicStyles.subtitle]}>(Most Trending AI Prompts)</Text>
