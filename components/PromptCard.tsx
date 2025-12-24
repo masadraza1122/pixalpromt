@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -63,6 +64,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
   isFavorite = false,
   onToggleFavorite
 }) => {
+  const router = useRouter();
   const [cardWidth, setCardWidth] = useState(getCardWidth());
   const [fontSizes, setFontSizes] = useState(getResponsiveFontSizes());
   
@@ -131,8 +133,21 @@ export const PromptCard: React.FC<PromptCardProps> = ({
     }).start();
   };
 
-  const handleToggleFavorite = () => {
+  const handleToggleFavorite = (e: any) => {
+    e.stopPropagation();
     onToggleFavorite?.(id);
+  };
+
+  const handleCardPress = () => {
+    router.push({
+      pathname: '/prompt-detail',
+      params: {
+        imageUrl,
+        title,
+        subtitle: subtitle || '',
+        id,
+      },
+    });
   };
 
   const dynamicStyles = {
@@ -157,6 +172,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
     >
       <TouchableOpacity
         activeOpacity={1}
+        onPress={handleCardPress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         style={{ flex: 1 }}
