@@ -1,4 +1,5 @@
 import { CategoryTabs } from '@/components/CategoryTabs';
+import { DebugPanel } from '@/components/DebugPanel';
 import { PromptCard, getNumColumns } from '@/components/PromptCard';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -388,6 +389,9 @@ export default function HomeScreen() {
         locations={[0, 0.25, 0.5, 0.75, 1]}
         style={styles.backgroundGradient}
       />
+
+      {/* Debug Panel - Remove in production */}
+      <DebugPanel />
 
       <View style={[styles.safeArea, dynamicStyles.safeArea]}>
         {/* Header */}

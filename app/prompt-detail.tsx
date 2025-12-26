@@ -1,4 +1,6 @@
+import { LimitReachedModal } from '@/components/LimitReachedModal';
 import { getRandomPrompt } from '@/constants/prompts';
+import { useUser } from '@/contexts/UserContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -24,6 +26,14 @@ export default function PromptDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams();
+  const { 
+    isPremium, 
+    promptsUsedToday, 
+    dailyLimit, 
+    usePrompt, 
+    watchAdForPrompt, 
+    upgradeToPremium 
+  } = useUser();
   
   // Parse params
   const imageUrl = params.imageUrl as string;
@@ -35,6 +45,8 @@ export default function PromptDetailScreen() {
   const [generatedPrompt, setGeneratedPrompt] = useState('');
   const [displayedText, setDisplayedText] = useState('');
   const [showPrompt, setShowPrompt] = useState(false);
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [grantedByAd, setGrantedByAd] = useState(false);
   
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -96,7 +108,7 @@ export default function PromptDetailScreen() {
     return () => clearInterval(interval);
   }, [showPrompt, generatedPrompt]);
 
-  const handleGeneratePrompt = () => {
+  const handleGeneratePrompt = async () => {
     // Button press animation
     Animated.sequence([
       Animated.timing(buttonScaleAnim, {
@@ -111,6 +123,20 @@ export default function PromptDetailScreen() {
       }),
     ]).start();
 
+    // Check if user can generate prompt
+    // If they watched an ad, allow them to proceed
+    if (!grantedByAd) {
+      const canGenerate = await usePrompt();
+      if (!canGenerate) {
+        // Show limit reached modal
+        setShowLimitModal(true);
+        return;
+      }
+    } else {
+      // Reset ad grant after use
+      setGrantedByAd(false);
+    }
+
     // Start generation
     setIsGenerating(true);
     setDisplayedText('');
@@ -124,6 +150,22 @@ export default function PromptDetailScreen() {
       setIsGenerating(false);
       setShowPrompt(true);
     }, 1500); // 1.5 second delay to simulate API call
+  };
+
+  const handleWatchAd = async () => {
+    await watchAdForPrompt();
+    // Grant user ability to generate one prompt
+    setGrantedByAd(true);
+    setShowLimitModal(false);
+    // Auto-trigger generation after watching ad
+    setTimeout(() => {
+      handleGeneratePrompt();
+    }, 300);
+  };
+
+  const handleUpgradePremium = async () => {
+    await upgradeToPremium();
+    setShowLimitModal(false);
   };
 
   const handleCopyPrompt = () => {
@@ -298,14 +340,34 @@ export default function PromptDetailScreen() {
             },
           ]}
         >
-          <View style={styles.infoCard}>
-            <Ionicons name="information-circle-outline" size={20} color="#14B8A6" />
-            <Text style={styles.infoText}>
-              This prompt is generated locally. Connect to AI for enhanced results.
-            </Text>
-          </View>
+          {/* Premium Status or Usage Counter */}
+          {isPremium ? (
+            <View style={[styles.infoCard, styles.premiumCard]}>
+              <Ionicons name="diamond" size={20} color="#FFC107" />
+              <Text style={[styles.infoText, styles.premiumText]}>
+                Premium Active • Unlimited Prompts
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.infoCard}>
+              <Ionicons name="information-circle-outline" size={20} color="#14B8A6" />
+              <Text style={styles.infoText}>
+                {promptsUsedToday} of {dailyLimit} free prompts used today
+              </Text>
+            </View>
+          )}
         </Animated.View>
       </ScrollView>
+
+      {/* Limit Reached Modal */}
+      <LimitReachedModal
+        visible={showLimitModal}
+        onClose={() => setShowLimitModal(false)}
+        onWatchAd={handleWatchAd}
+        onUpgradePremium={handleUpgradePremium}
+        promptsUsed={promptsUsedToday}
+        dailyLimit={dailyLimit}
+      />
     </View>
   );
 }
@@ -526,6 +588,14 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.8)',
     marginLeft: 12,
     lineHeight: 20,
+  },
+  premiumCard: {
+    backgroundColor: 'rgba(255, 193, 7, 0.15)',
+    borderColor: 'rgba(255, 193, 7, 0.3)',
+  },
+  premiumText: {
+    color: '#FFC107',
+    fontWeight: '600',
   },
 });
 
